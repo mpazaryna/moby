@@ -1,0 +1,29 @@
+# 🐳 Moby - Docker Project Manager
+
+projects:
+  variant-be:
+    path: /Users/mpaz/workspace/variant-be
+    docker:
+      ports: [8000]
+      container_name: variant-be-server
+      image_name: variant-be
+      health_check: "/mock"
+    aws:
+      region: us-east-1
+      repository: variant-be
+      platforms: [amd64]
+  yoga-teacher-toolkit:
+    path: /Users/mpaz/workspace/yoga-teacher-toolkit
+    docker:
+      ports: [8000]
+      container_name: yoga-teacher-toolkit-server
+      image_name: yoga-teacher-toolkit
+      health_check: "/health"
+      build:
+        context: .
+        dockerfile: Dockerfile
+    aws:
+      region: us-east-1
+      repository: yoga-teacher-toolkit
+      platforms: [amd64]
+      account_id: 123456789012  # You'll need to replace this with your actual AWS account ID 

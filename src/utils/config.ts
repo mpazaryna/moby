@@ -1,13 +1,14 @@
-import { parse as parseYaml } from "https://deno.land/std@0.210.0/yaml/mod.ts";
+import { parse } from "std/yaml/mod.ts";
 import { join, dirname } from "https://deno.land/std@0.210.0/path/mod.ts";
 import { Config, ProjectConfig } from "../types.ts";
+import { exists } from "std/fs/mod.ts";
 
 const DEFAULT_CONFIG: Config = {
   projects: {},
 };
 
 // Config is always in the moby project directory
-const CONFIG_PATH = new URL("../../.moby.yaml", import.meta.url).pathname;
+const CONFIG_PATH = new URL("../../moby.yaml", import.meta.url).pathname;
 
 let currentConfig: Config | null = null;
 let currentProject: string | null = null;
@@ -19,31 +20,22 @@ export function getCurrentProjectPath(): string {
   return currentConfig.projects[currentProject].path;
 }
 
-export async function loadConfig(projectName?: string): Promise<ProjectConfig> {
+export async function loadConfig(projectName: string): Promise<ProjectConfig> {
   try {
-    // Load config if not already loaded
-    if (!currentConfig) {
-      const configFile = await Deno.readTextFile(CONFIG_PATH);
-      currentConfig = parseYaml(configFile) as Config;
-    }
+    const configContent = await Deno.readTextFile(CONFIG_PATH);
+    const config = parse(configContent) as { projects: Record<string, ProjectConfig> };
 
-    if (!projectName) {
-      throw new Error("Project name is required");
-    }
-
-    // Get project config
-    const projectConfig = currentConfig.projects[projectName];
-    if (!projectConfig) {
-      throw new Error(`Project ${projectName} not found in .moby.yaml`);
+    if (!config.projects || !config.projects[projectName]) {
+      throw new Error(`Project ${projectName} not found in moby.yaml`);
     }
 
     // Store current project
     currentProject = projectName;
     
-    return projectConfig;
+    return config.projects[projectName];
   } catch (error) {
     if (error instanceof Deno.errors.NotFound) {
-      throw new Error("Configuration file .moby.yaml not found in moby project directory");
+      throw new Error("Configuration file moby.yaml not found in moby project directory");
     }
     throw error;
   }

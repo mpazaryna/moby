@@ -25,9 +25,11 @@ Commands:
   rebuild   - Rebuild the image and restart the container
   logs      - Show container logs (with optional follow)
   clean     - Remove all development containers and images
+  ps        - List all Docker containers
+  prune     - Remove all stopped containers
 
 Options:
-  --port    - Specify port (default: from .moby.yaml)
+  --port    - Specify port (default: from moby.yaml)
   --follow  - Follow logs (only with logs command)
   --help    - Show this help message
 
@@ -35,6 +37,8 @@ Examples:
   moby dev start variant-be
   moby dev logs variant-be --follow
   moby dev rebuild variant-be --port 3000
+  moby dev ps
+  moby dev prune
   `);
 }
 
@@ -74,11 +78,52 @@ async function stopContainer(config: any) {
   }
 }
 
+async function listContainers(projectName?: string) {
+  console.log("📦 Listing Docker containers...\n");
+  
+  // Base command
+  const cmd = ["docker", "ps", "-a"];
+  
+  // Add filter if project name is provided
+  if (projectName) {
+    const config = await loadConfig(projectName);
+    cmd.push("--filter", `name=${config.docker.container_name}`);
+  }
+  
+  // Add format
+  cmd.push("--format", "table {{.ID}}\t{{.Names}}\t{{.Status}}\t{{.Ports}}\t{{.Image}}");
+  
+  await runCommand(cmd);
+}
+
+async function pruneContainers() {
+  console.log("🧹 Removing all stopped containers...");
+  await runCommand(["docker", "container", "prune", "-f"]);
+  console.log("✅ All stopped containers removed!");
+}
+
 export async function dev(args: Args) {
   const subcommand = args._[1] as string;
   const projectName = args._[2] as string;
 
-  if (!subcommand || !projectName || args.help) {
+  if (!subcommand || args.help) {
+    showHelp();
+    return;
+  }
+
+  // Special cases for commands that don't need project name
+  if (subcommand === "ps") {
+    await listContainers(projectName);
+    return;
+  }
+
+  if (subcommand === "prune") {
+    await pruneContainers();
+    return;
+  }
+
+  if (!projectName) {
+    console.error("Error: Project name is required for this command");
     showHelp();
     return;
   }
