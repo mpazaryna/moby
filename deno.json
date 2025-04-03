@@ -1,0 +1,11 @@
+{
+  "tasks": {
+    "dev": "deno run --watch src/cli.ts",
+    "start": "deno run src/cli.ts",
+    "test": "deno test",
+    "install": "deno install -A -n moby src/cli.ts"
+  },
+  "imports": {
+    "std/": "https://deno.land/std@0.210.0/"
+  }
+} 

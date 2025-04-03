@@ -1,0 +1,14 @@
+# 🐳 Moby - Docker Project Manager
+
+projects:
+  variant-be:
+    path: /Users/mpaz/workspace/variant-be
+    docker:
+      ports: [8000]
+      container_name: variant-be-server
+      image_name: variant-be
+      health_check: "/mock"
+    aws:
+      region: us-east-1
+      repository: variant-be
+      platforms: [amd64] 
